@@ -2,15 +2,15 @@
 package main_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
 	"testing"
         "github.com/vitormcid/getnet-challange"
+	"bytes"
+	"encoding/json"
+	"strconv"
 )
 
 var a main.App
@@ -60,7 +60,7 @@ func TestCreateUser(t *testing.T) {
 
 	clearTable()
 
-	var jsonStr = []byte(`{"name":"test user", "email": "user@teste.com", "password" "password"}`)
+	var jsonStr = []byte(`{"name":"test user", "email": "user@teste.com", "password": "password"}`)
 	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -75,7 +75,7 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	if m["email"] != "user@teste.com" {
-		t.Errorf("Expected user price to be user@teste.com. Got '%v'", m["email"])
+		t.Errorf("Expected user email to be user@teste.com. Got '%v'", m["email"])
 	}
 
 	//to do password
@@ -117,7 +117,7 @@ func TestUpdateUser(t *testing.T) {
 	var originalUser map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
-	var jsonStr = []byte(`{"name":"test user - updated name", "email": "user@teste.com", "password": "password"}`)
+	var jsonStr = []byte(`{"name":"test user - updated name", "email": "updateuser@teste.com", "password": "updatepassword"}`)
 	req, _ = http.NewRequest("PUT", "/user/1", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
