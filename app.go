@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"unicode"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -82,12 +83,18 @@ func (a *App) getUsers(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 	var p user
+
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&p); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 	defer r.Body.Close()
+
+	if !validatePassword(p.Password) {
+		respondWithError(w, http.StatusBadRequest, "The password is invalid")
+		return
+	}
 
 	if err := p.createUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -100,6 +107,7 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
+
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid user ID")
 		return
@@ -107,12 +115,19 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 
 	var p user
 	decoder := json.NewDecoder(r.Body)
+
 	if err := decoder.Decode(&p); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid resquest payload")
 		return
 	}
+
 	defer r.Body.Close()
 	p.ID = id
+
+	if !validatePassword(p.Password) {
+		respondWithError(w, http.StatusBadRequest, "The password is invalid")
+		return
+	}
 
 	if err := p.updateUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
@@ -157,4 +172,41 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/user/{id:[0-9]+}", a.getUser).Methods("GET")
 	a.Router.HandleFunc("/user/{id:[0-9]+}", a.updateUser).Methods("PUT")
 	a.Router.HandleFunc("/user/{id:[0-9]+}", a.deleteUser).Methods("DELETE")
+}
+
+func validatePassword(s string) bool {
+	var (
+		hasMinLen     = false
+		hasUpper      = false
+		hasLower      = false
+		hasNumber     = false
+		hasSpecial    = false
+		lastCharacter rune
+	)
+
+	if len(s) >= 9 {
+		hasMinLen = true
+	}
+
+	for _, char := range s {
+
+		if char == lastCharacter {
+			return false
+		}
+
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+
+		lastCharacter = char
+	}
+
+	return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
 }

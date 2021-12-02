@@ -2,15 +2,15 @@
 package main_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"testing"
         "github.com/vitormcid/getnet-challange"
-	"bytes"
-	"encoding/json"
-	"strconv"
 )
 
 var a main.App
@@ -57,10 +57,9 @@ func TestGetNonExistentUser(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-
 	clearTable()
 
-	var jsonStr = []byte(`{"name":"test user", "email": "user@teste.com", "password": "password"}`)
+	var jsonStr = []byte(`{"name":"test user", "email": "user@teste.com", "password": "abcd1!432A"}`)
 	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -78,12 +77,30 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("Expected user email to be user@teste.com. Got '%v'", m["email"])
 	}
 
-	//to do password
+	if m["password"] != "abcd1!432A" {
+		t.Errorf("Expected user password to be password. Got '%v'", m["password"])
+	}
 
-	// the id is compared to 1.0 because JSON unmarshaling converts numbers to
-	// floats, when the target is a map[string]interface{}
 	if m["id"] != 1.0 {
 		t.Errorf("Expected user ID to be '1'. Got '%v'", m["id"])
+	}
+}
+
+func TestInvalidPassword(t *testing.T) {
+	clearTable()
+
+	var jsonStr = []byte(`{"name":"test user", "email": "user@teste.com", "password": "invalidPassword"}`)
+	req, _ := http.NewRequest("POST", "/user", bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+
+	response := executeRequest(req)
+
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	message_error := `{"error":"The password is invalid"}`
+
+	if response.Body.String() != message_error {
+		t.Errorf("Expected user body response to be '%s'. Got '%s'", response.Body.String(), message_error)
 	}
 }
 
@@ -103,7 +120,7 @@ func addUsers(count int) {
 	}
 
 	for i := 0; i < count; i++ {
-		a.DB.Exec("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", "User "+strconv.Itoa(i), "User@"+strconv.Itoa(i), "password")
+		a.DB.Exec("INSERT INTO users(name, email, password) VALUES($1, $2, $3)", "User "+strconv.Itoa(i), "User@"+strconv.Itoa(i), "abcd1!432A")
 	}
 }
 
@@ -117,7 +134,7 @@ func TestUpdateUser(t *testing.T) {
 	var originalUser map[string]interface{}
 	json.Unmarshal(response.Body.Bytes(), &originalUser)
 
-	var jsonStr = []byte(`{"name":"test user - updated name", "email": "updateuser@teste.com", "password": "updatepassword"}`)
+	var jsonStr = []byte(`{"name":"test user - updated name", "email": "updateuser@teste.com", "password": "abcd1!432B"}`)
 	req, _ = http.NewRequest("PUT", "/user/1", bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 
