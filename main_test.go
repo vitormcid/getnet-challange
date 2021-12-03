@@ -16,6 +16,7 @@ import (
 var a main.App
 
 func TestMain(m *testing.M) {
+
 	a = main.App{}
 	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
