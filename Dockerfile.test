@@ -1,6 +1,6 @@
 FROM golang:latest as BUILD
 RUN apt-get update && \
-    apt-get install -y xvfb wkhtmltopdf ghostscript
+    apt-get install -y xvfb
 WORKDIR testdir
 COPY . .
 ENTRYPOINT ["go", "test", "-v", "./...", "-coverprofile", "cover.out"]
