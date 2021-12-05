@@ -93,8 +93,16 @@ Considera-se os seguintes parâmetros:
 
 }
  ```
-  
 
+## Encriptografia
+
+- Considera-se essencial a encriptografia da senha no banco de dados.
+Para isso, utilizou-se a biblioteca crypto/bcrypt.
+
+- A senha é salva encriptografada no banco e não pode mais ser recuperada,
+  Porém pode ser comparada com a senha original para validação
+
+  
 ## Teste Unitários
 
 * Os teste unitários são executados quando o projeto é buildado

@@ -69,6 +69,8 @@ func (a *App) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	p.Password = encryptPassword(p.Password)
+
 	if err := p.createUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -101,6 +103,8 @@ func (a *App) updateUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "The password is invalid")
 		return
 	}
+
+	p.Password = encryptPassword(p.Password)
 
 	if err := p.updateUser(a.DB); err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())

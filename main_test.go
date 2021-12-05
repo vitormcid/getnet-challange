@@ -4,6 +4,7 @@ package main_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"strconv"
 	"testing"
          "github.com/vitormcid/getnet-challange"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var a main.App
@@ -75,7 +77,11 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("Expected user email to be user@teste.com. Got '%v'", m["email"])
 	}
 
-	if m["password"] != "abcd1!432A" {
+	password := fmt.Sprint(m["password"])
+
+	err := bcrypt.CompareHashAndPassword([]byte(password), []byte("abcd1!432A"))
+
+	if err != nil {
 		t.Errorf("Expected user password to be password. Got '%v'", m["password"])
 	}
 

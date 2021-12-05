@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -19,4 +20,14 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
+}
+
+func encryptPassword(password string) string {
+	bytePassword := []byte(password)
+	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(hashedPassword)
 }
